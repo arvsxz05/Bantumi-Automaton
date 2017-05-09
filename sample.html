@@ -12,12 +12,11 @@
 		<script>
 			var stone_holder = new Array(24);
 			Crafty.init(1200,363, document.getElementById('game'));
-			// var stones = Crafty.e("2D, DOM, Image")
-			// 	.attr({x: 0, y: 0})
-			// 	.image("stones.png");
+			
+			var HOME_HOLLOW_COORDINATES = [{x: 188, y: 50}, {x: 328, y: 50}, {x: 468, y: 50}, {x: 608, y: 50}, {x: 748, y: 50}, {x: 888, y: 50},
+										{x: 188, y: 190}, {x: 328, y: 190}, {x: 468, y: 190}, {x: 608, y: 190}, {x: 748, y: 190}, {x: 888, y: 190}]
 			var STONE_DIAMETER = 40;
 			var STONE_RADIUS = STONE_DIAMETER/2;
-			var subtract_to_stone_coor = Math.round((Math.sqrt(2*Math.pow(STONE_RADIUS, 2)) - STONE_RADIUS) * (1/Math.sqrt(2)))
 
 			var assets_obj = {
 				"sprites": {
@@ -57,7 +56,7 @@
 
 			Crafty.load(assets_obj, function() {
 				Crafty.e("2D, Canvas, whole").attr({x: 0, y: 0});
-				for(var i=0; i<24; i++) {
+				for(var i=0; i<48; i++) {
 					var x, y, dist;
 					while (true) {
 						x = Math.round((Math.random() * 85));
@@ -66,10 +65,8 @@
 						if (dist <= 40)
 							break;
 					}
-					// x -= subtract_to_stone_coor;
-					// y -= subtract_to_stone_coor;
-					x += 188;
-					y += 50;
+					x += HOME_HOLLOW_COORDINATES[Math.floor(i/4)].x;
+					y += HOME_HOLLOW_COORDINATES[Math.floor(i/4)].y;
 					var random_num = Math.floor((Math.random() * 10)+1);
 					switch (random_num) {
 						case 1:
