@@ -1,0 +1,117 @@
+<html>
+	<head>
+		<style>
+            body {
+                margin: 0;
+            }
+        </style>
+	</head>
+	<body>
+		<div id="game"></div>
+		<script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
+		<script>
+			var stone_holder = new Array(24);
+			Crafty.init(1200,363, document.getElementById('game'));
+			// var stones = Crafty.e("2D, DOM, Image")
+			// 	.attr({x: 0, y: 0})
+			// 	.image("stones.png");
+			var STONE_DIAMETER = 40;
+			var STONE_RADIUS = STONE_DIAMETER/2;
+			var subtract_to_stone_coor = Math.round((Math.sqrt(2*Math.pow(STONE_RADIUS, 2)) - STONE_RADIUS) * (1/Math.sqrt(2)))
+
+			var assets_obj = {
+				"sprites": {
+					"stones.png" : {
+						tile: 40,
+						tileh: 40,
+						map: {
+							first: [0, 0],
+							second: [1, 0],
+							third: [2, 0],
+							fourth: [3, 0],
+							fifth: [4, 0],
+							sixth: [5, 0],
+							seventh: [6, 0],
+							eighth: [7, 0],
+							ninth: [8, 0],
+							tenth: [9, 0]
+						}
+					},
+					"board.png" : {
+						tile: 1200,
+						tileh: 363,
+						map: {
+							whole: [0, 0]
+						}
+					},
+					"hand.png" : {
+						tile: 90,
+						tileh: 60,
+						map: {
+							first_gesture: [0, 0],
+							last_gesture:[7, 0]
+						}
+					}
+				}
+			}
+
+			Crafty.load(assets_obj, function() {
+				Crafty.e("2D, Canvas, whole").attr({x: 0, y: 0});
+				for(var i=0; i<24; i++) {
+					var x, y, dist;
+					while (true) {
+						x = Math.round((Math.random() * 85));
+						y = Math.round((Math.random() * 85));
+						dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+						if (dist <= 40)
+							break;
+					}
+					// x -= subtract_to_stone_coor;
+					// y -= subtract_to_stone_coor;
+					x += 188;
+					y += 50;
+					var random_num = Math.floor((Math.random() * 10)+1);
+					switch (random_num) {
+						case 1:
+							Crafty.e("2D, Canvas, first").attr({x: x, y: y});
+							break;
+						case 2:
+							Crafty.e("2D, Canvas, second").attr({x: x, y: y});
+							break;
+						case 3:
+							Crafty.e("2D, Canvas, third").attr({x: x, y: y});
+							break;
+						case 4:
+							Crafty.e("2D, Canvas, fourth").attr({x: x, y: y});
+							break;
+						case 5:
+							Crafty.e("2D, Canvas, fifth").attr({x: x, y: y});
+							break;
+						case 6:
+							Crafty.e("2D, Canvas, sixth").attr({x: x, y: y});
+							break;
+						case 7:
+							Crafty.e("2D, Canvas, seventh").attr({x: x, y: y});
+							break;
+						case 8:
+							Crafty.e("2D, Canvas, eighth").attr({x: x, y: y});
+							break;
+						case 9:
+							Crafty.e("2D, Canvas, ninth").attr({x: x, y: y});
+							break;
+						case 10:
+							Crafty.e("2D, Canvas, tenth").attr({x: x, y: y});
+							break;
+					}
+				}
+				var hand = Crafty.e('2D, Canvas, first_gesture, SpriteAnimation')
+					.reel("putting", 1000, [
+					[0, 0], [1, 0], [2, 0], [3, 0],
+					[4, 0], [5, 0], [6, 0], [7, 0]
+					])
+					.attr({x:100, y:100})
+					.animate("putting", -1);
+			});
+		</script>
+	</body>
+</html>
