@@ -10,13 +10,67 @@
 		<div id="game"></div>
 		<script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
 		<script>
-			var stone_holder = new Array(24);
 			Crafty.init(1200,363, document.getElementById('game'));
-			
-			var HOME_HOLLOW_COORDINATES = [{x: 188, y: 50}, {x: 328, y: 50}, {x: 468, y: 50}, {x: 608, y: 50}, {x: 748, y: 50}, {x: 888, y: 50},
-										{x: 188, y: 190}, {x: 328, y: 190}, {x: 468, y: 190}, {x: 608, y: 190}, {x: 748, y: 190}, {x: 888, y: 190}]
+			var HOME_HOLLOW_COORDINATES = [{x: 188, y: 190},{x: 328, y: 190},{x: 468, y: 190},{x: 608, y: 190},{x: 748, y: 190},{x: 888, y: 190},{x: 1022, y: 119},
+											{x: 888, y: 50}, {x: 748, y: 50}, {x: 608, y: 50}, {x: 468, y: 50}, {x: 328, y: 50}, {x: 188, y: 50}, {x: 55, y: 119}];
 			var STONE_DIAMETER = 40;
 			var STONE_RADIUS = STONE_DIAMETER/2;
+			var stone_holder = new Array(24);
+			var homes = new Array(14);
+			var CURRENT_HOME = 0;
+			for (var i = 0; i < 14; i++) {
+				homes[i] = [];
+			};
+
+			Crafty.c("Stone", {
+				home_number: 0,
+				change_home: function(new_home) {
+					this.home_number = new_home;
+				}
+			});
+
+			Crafty.c("Houses", {
+				what_house: function(x, y) {
+					for (var i=0; i < HOME_HOLLOW_COORDINATES.length; i++) {
+						if(i != 6 && i != 13) {
+							if(x >= HOME_HOLLOW_COORDINATES[i].x && x <= HOME_HOLLOW_COORDINATES[i].x + 125 &&
+								y >= HOME_HOLLOW_COORDINATES[i].y && y <= HOME_HOLLOW_COORDINATES[i].y + 125)
+								return i;
+						}
+					}
+					return -1;
+				}
+			});
+
+			Crafty.c("HideShow", {
+			    hide : function() {
+			        this.attr({
+			            z : 0,
+			            alpha : 0.01
+			        });
+			    },
+			 
+			    show : function() {
+			        this.attr({
+			            z : 2,
+			            alpha : 1
+			        });
+			    }
+			});
+
+			Crafty.c("Hand", {
+				activated: false,
+				remaining_moves: 0,
+				activate: function(home_no) {
+					if(this.remaining_moves != 0) {
+						this.x = HOME_HOLLOW_COORDINATES[home_no].x;
+						this.y = HOME_HOLLOW_COORDINATES[home_no].y;
+						this.resumeAnimation();
+						this.remaining_moves--;
+					}
+				},
+
+			});
 
 			var assets_obj = {
 				"sprites": {
@@ -55,60 +109,84 @@
 			}
 
 			Crafty.load(assets_obj, function() {
-				Crafty.e("2D, Canvas, whole").attr({x: 0, y: 0});
-				for(var i=0; i<48; i++) {
-					var x, y, dist;
-					while (true) {
-						x = Math.round((Math.random() * 85));
-						y = Math.round((Math.random() * 85));
-						dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
-						if (dist <= 40)
-							break;
+				Crafty.e("2D, Canvas, whole, Houses, Mouse").attr({x: 0, y: 0})
+				.bind("Click", function(e) {
+					console.log("here");
+					clicked_house = this.what_house(e.clientX, e.clientY);
+					if(i != 6){
+						if(clicked_house != -1)
+							console.log(clicked_house);
 					}
-					x += HOME_HOLLOW_COORDINATES[Math.floor(i/4)].x;
-					y += HOME_HOLLOW_COORDINATES[Math.floor(i/4)].y;
-					var random_num = Math.floor((Math.random() * 10)+1);
-					switch (random_num) {
-						case 1:
-							Crafty.e("2D, Canvas, first").attr({x: x, y: y});
-							break;
-						case 2:
-							Crafty.e("2D, Canvas, second").attr({x: x, y: y});
-							break;
-						case 3:
-							Crafty.e("2D, Canvas, third").attr({x: x, y: y});
-							break;
-						case 4:
-							Crafty.e("2D, Canvas, fourth").attr({x: x, y: y});
-							break;
-						case 5:
-							Crafty.e("2D, Canvas, fifth").attr({x: x, y: y});
-							break;
-						case 6:
-							Crafty.e("2D, Canvas, sixth").attr({x: x, y: y});
-							break;
-						case 7:
-							Crafty.e("2D, Canvas, seventh").attr({x: x, y: y});
-							break;
-						case 8:
-							Crafty.e("2D, Canvas, eighth").attr({x: x, y: y});
-							break;
-						case 9:
-							Crafty.e("2D, Canvas, ninth").attr({x: x, y: y});
-							break;
-						case 10:
-							Crafty.e("2D, Canvas, tenth").attr({x: x, y: y});
-							break;
+				});
+				for(var i=0; i<14; i++) {
+					if(i != 6 && i != 13) {
+						var x, y, dist;
+						for(var j=0; j<4; j++) {
+							while (true) {
+								x = Math.round((Math.random() * 85));
+								y = Math.round((Math.random() * 85));
+								dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+								if (dist <= 40)
+									break;
+							}
+							x += HOME_HOLLOW_COORDINATES[i].x;
+							y += HOME_HOLLOW_COORDINATES[i].y;
+							var random_num = Math.floor((Math.random() * 10)+1);
+							switch (random_num) {
+								case 1:
+									homes[i].push(Crafty.e("2D, Canvas, first, HideShow").attr({x: x, y: y}));
+									break;
+								case 2:
+									homes[i].push(Crafty.e("2D, Canvas, second, HideShow").attr({x: x, y: y}));
+									break;
+								case 3:
+									homes[i].push(Crafty.e("2D, Canvas, third, HideShow").attr({x: x, y: y}));
+									break;
+								case 4:
+									homes[i].push(Crafty.e("2D, Canvas, fourth, HideShow").attr({x: x, y: y}));
+									break;
+								case 5:
+									homes[i].push(Crafty.e("2D, Canvas, fifth, HideShow").attr({x: x, y: y}));
+									break;
+								case 6:
+									homes[i].push(Crafty.e("2D, Canvas, sixth, HideShow").attr({x: x, y: y}));
+									break;
+								case 7:
+									homes[i].push(Crafty.e("2D, Canvas, seventh, HideShow").attr({x: x, y: y}));
+									break;
+								case 8:
+									homes[i].push(Crafty.e("2D, Canvas, eighth, HideShow").attr({x: x, y: y}));
+									break;
+								case 9:
+									homes[i].push(Crafty.e("2D, Canvas, ninth, HideShow").attr({x: x, y: y}));
+									break;
+								case 10:
+									homes[i].push(Crafty.e("2D, Canvas, tenth, HideShow").attr({x: x, y: y}));
+									break;
+							}
+						}
 					}
 				}
-				var hand = Crafty.e('2D, Canvas, first_gesture, SpriteAnimation')
+
+				var hand = Crafty.e('2D, Canvas, first_gesture, SpriteAnimation, Hand, Mouse')
 					.reel("putting", 1000, [
 					[0, 0], [1, 0], [2, 0], [3, 0],
 					[4, 0], [5, 0], [6, 0], [7, 0]
 					])
 					.attr({x:100, y:100})
 					.animate("putting", -1);
+
+				hand.bind("EnterFrame", function() {
+
+					if(this.reelPosition() > 6 && this.remaining_moves != 0) {
+						
+						this.reelPosition(0);
+						this.pauseAnimation();
+						this.activate(++CURRENT_HOME%13);
+					}
+				});
 			});
+			
 		</script>
 	</body>
 </html>
