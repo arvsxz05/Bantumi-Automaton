@@ -67,7 +67,7 @@
 						this.y = HOME_HOLLOW_COORDINATES[home_no].y;
 						this.resumeAnimation();
 						this.remaining_moves--;
-					}
+					} else this.activated = false;
 				},
 
 			});
@@ -111,11 +111,19 @@
 			Crafty.load(assets_obj, function() {
 				Crafty.e("2D, Canvas, whole, Houses, Mouse").attr({x: 0, y: 0})
 				.bind("Click", function(e) {
-					console.log("here");
-					clicked_house = this.what_house(e.clientX, e.clientY);
-					if(i != 6){
-						if(clicked_house != -1)
-							console.log(clicked_house);
+					if(!hand.activated) {
+						clicked_house = this.what_house(e.clientX, e.clientY);
+						if(i != 6) {
+							if(clicked_house != -1)
+								for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
+								 	homes[clicked_house][i].hide();
+								 	CURRENT_HOME = clicked_house;
+								 	hand.reelPosition(0);
+								 	hand.activated = true;
+									hand.remaining_moves = homes[clicked_house].length+1;
+									hand.activate(clicked_house);
+								 };
+						}
 					}
 				});
 				for(var i=0; i<14; i++) {
@@ -174,16 +182,21 @@
 					[4, 0], [5, 0], [6, 0], [7, 0]
 					])
 					.attr({x:100, y:100})
-					.animate("putting", -1);
+					.animate("putting", -1)
+					// .bind("Click", function() {
+					// 	this.activated = true;
+					// 	this.remaining_moves = 4;
+					// 	this.activate(0)
+					// });
 
 				hand.bind("EnterFrame", function() {
-
 					if(this.reelPosition() > 6 && this.remaining_moves != 0) {
-						
 						this.reelPosition(0);
 						this.pauseAnimation();
-						this.activate(++CURRENT_HOME%13);
+						this.activate(++CURRENT_HOME%14);
 					}
+					if(this.remaining_moves == 0)
+						this.activated = false;
 				});
 			});
 			
