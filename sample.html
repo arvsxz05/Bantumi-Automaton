@@ -175,11 +175,7 @@
 					])
 					.attr({x:100, y:100})
 					.animate("putting", -1);
-					// .bind("Click", function() {
-					// 	this.activated = true;
-					// 	this.remaining_moves = 4;
-					// 	this.activate(0)
-					// });
+
 				hand.bind("EnterFrame", function() {
 					if(this.reelPosition() > 6 && this.remaining_moves != 0) {
 						this.reelPosition(0);
