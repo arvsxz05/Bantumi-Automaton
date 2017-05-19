@@ -18,49 +18,9 @@
 			var stone_holder = new Array(24);
 			var homes = new Array(14);
 			var CURRENT_HOME = 0;
-			var STONES_TO_DISTRIB;
-			//new variables
-			var player = 1;
-			var MOVE_DONE = false;
 			for (var i = 0; i < 14; i++) {
 				homes[i] = [];
 			};
-
-			/*
-				FOR COMPUTER OPPONENT
-			*/
-
-			var moves = [];
-			function getMoves(){
-				moves = [];
-				var randMoves = []
-				for (var i = 12; i > 6; i--){
-					if (i + homes[i].length == 13){
-						moves.push(i);
-					}
-					if (homes[i].length > 0){
-						randMoves.push(i);
-					}
-				}
-				if (moves.length < 3){
-					//scores[] = [];
-					// for (var i = 0; i < 6; i++){
-					// 	if (homes[i] > 0 && homes[(homes[12-i] + (12-i))]){
-					// 		//scores.push(arr[12-i] + 1).push(i);
-					// 	}
-					// }
-					// if (scores.length > 0){
-					// 	var index  = Math.max(...scores);
-					// 	moves.push(index);
-					// }
-					// else{
-					// 	moves.push(randMoves[Math.floor(Math.random()*randMoves.length)]);
-					// }
-					moves.push(randMoves[Math.floor(Math.random()*randMoves.length)]);
-				}
-				return moves[0];
-			}
-
 			Crafty.c("Stone", {
 				home_number: 0,
 				change_home: function(new_home) {
@@ -144,22 +104,18 @@
 			Crafty.load(assets_obj, function() {
 				Crafty.e("2D, Canvas, whole, Houses, Mouse").attr({x: 0, y: 0})
 				.bind("Click", function(e) {
-					if (player == 1){
-						if(!hand.activated) {
-							clicked_house = this.what_house(e.clientX, e.clientY);
-							if(i != 6) {
-								if(clicked_house != -1)
-									STONES_TO_DISTRIB = homes[clicked_house];
-									for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
-									 	homes[clicked_house][i].hide();
-									 	CURRENT_HOME = clicked_house;
-									 	hand.reelPosition(0);
-									 	hand.activated = true;
-										hand.remaining_moves = homes[clicked_house].length+1;
-										hand.activate(clicked_house); 
-									};
-									MOVE_DONE = true;
-							}
+					if(!hand.activated) {
+						clicked_house = this.what_house(e.clientX, e.clientY);
+						if(i != 6) {
+							if(clicked_house != -1)
+								for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
+								 	homes[clicked_house][i].hide();
+								 	CURRENT_HOME = clicked_house;
+								 	hand.reelPosition(0);
+								 	hand.activated = true;
+									hand.remaining_moves = homes[clicked_house].length+1;
+									hand.activate(clicked_house);
+								 };
 						}
 					}
 				});
@@ -221,70 +177,14 @@
 					.animate("putting", -1);
 
 				hand.bind("EnterFrame", function() {
-					//COMPUTER OPPONENT
-					if (player == 2){
-						if(!hand.activated) {
-							clicked_house = getMoves();
-							console.log("PLAYER 2's turn " + clicked_house);
-							if(i != 6) {
-								if(clicked_house != -1)
-									STONES_TO_DISTRIB = homes[clicked_house];
-									for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
-									 	homes[clicked_house][i].hide();
-									 	CURRENT_HOME = clicked_house;
-									 	hand.reelPosition(0);
-									 	hand.activated =  true;
-										hand.remaining_moves = homes[clicked_house].length+1;
-										hand.activate(clicked_house);
-									};
-									MOVE_DONE = true;
-							}
-						}
-					}
-
 					if(this.reelPosition() > 6 && this.remaining_moves != 0) {
 						this.reelPosition(0);
 						this.pauseAnimation();
-						++CURRENT_HOME
-						CURRENT_HOME %= 14;
-						var stone = STONES_TO_DISTRIB.pop();
-						var x, y;
-						while (true) {
-							x = Math.round((Math.random() * 85));
-							y = Math.round((Math.random() * 85));
-							dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
-							if (dist <= 40)
-								break;
-						}
-						stone.x = x + HOME_HOLLOW_COORDINATES[CURRENT_HOME].x;
-						stone.y = y + HOME_HOLLOW_COORDINATES[CURRENT_HOME].y;
-						stone.show();
-						homes[CURRENT_HOME].push(stone);
-						this.activate(CURRENT_HOME);
+						this.activate(++CURRENT_HOME%14);
 					}
-					if(this.remaining_moves == 0){
+					if(this.remaining_moves == 0)
 						this.activated = false;
-						//NEW
-						if (MOVE_DONE){
-							player = NEXT_PLAYER(CURRENT_HOME, player);
-							console.log("Player " + player);
-						}
-						MOVE_DONE = false;
-					}
 				});
-				//switching turns
-				function NEXT_PLAYER(stopped_at,player){
-					if (player == 1){
-						if (stopped_at == 6)
-							return player;
-						else return 2;
-					}
-					else if (player == 2){
-						if (stopped_at == 13)
-							return player;
-						else return 1;
-					}
-				}
 			});
 			
 		</script>
