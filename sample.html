@@ -1,0 +1,479 @@
+<html>
+	<head>
+		<style>
+            body {
+                margin: 0;
+            }
+        </style>
+	</head>
+	<body>
+		<div id="game"></div>
+		<script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
+		<script>
+			Crafty.init(1200,363, document.getElementById('game'));
+
+			//Stone math info
+			var STONE_DIAMETER = 40;
+			var STONE_RADIUS = STONE_DIAMETER/2;
+			var stone_holder = new Array(24);
+			
+			// Holds arrays of Stones for each Home
+			var homes = new Array(14);
+			
+			var CURRENT_HOME = 0;
+			var STONES_TO_DISTRIB;
+			for (var i = 0; i < 14; i++) {
+				homes[i] = [];
+			};
+
+			//new variables
+			var player = 1;
+			var MOVE_DONE = false;
+			for (var i = 0; i < 14; i++) {
+				homes[i] = [];
+			};
+
+			/*
+				FOR COMPUTER OPPONENT
+			*/
+
+			var moves = [];
+			function getMoves(){
+				moves = [];
+				var randMoves = []
+				for (var i = 12; i > 6; i--){
+					if (i + homes[i].length == 13){
+						moves.push(i);
+					}
+					if (homes[i].length > 0){
+						randMoves.push(i);
+					}
+				}
+				if (moves.length < 3){
+					var scores = [];
+					var index;
+					//for steal
+					for (var i = 0; i < 6; i++){
+						if (homes[i] > 0 && homes[(homes[12-i] + (12-i))]){
+					 		scores.push(arr[12-i] + 1);
+					 	}
+					}
+					if (scores.length > 0){
+						index = scores.indexOf(Math.max(...scores));
+					}
+					else{
+						moves.push(randMoves[Math.floor(Math.random()*randMoves.length)]);
+					}
+					// moves.push(randMoves[Math.floor(Math.random()*randMoves.length)]);
+				}
+				return moves[0];
+			}
+
+			Crafty.c("Stone", {
+				home_number: 0,
+				change_home: function(new_home) {
+					this.home_number = new_home;
+				}
+			});
+			Crafty.c("GameBoard", {
+				home_coordinates: null,
+				home_display: null,	// Array for holding display slots
+
+				init: function(){
+					this.home_coordinates = [
+						{x: this.x + 188, y: this.y + 190},	// slot 0
+						{x: this.x + 328, y: this.y + 190},	// slot 1
+						{x: this.x + 468, y: this.y + 190},	// slot 2
+						{x: this.x + 608, y: this.y + 190},	// slot 3
+						{x: this.x + 748, y: this.y + 190},	// slot 4
+						{x: this.x + 888, y: this.y + 190},	// slot 5
+						{x: this.x + 1022, y: this.y + 119},// slot 6
+						{x: this.x + 888, y: this.y + 50},	// slot 7
+						{x: this.x + 748, y: this.y + 50},	// slot 8
+						{x: this.x + 608, y: this.y + 50},	// slot 9
+						{x: this.x + 468, y: this.y + 50},	// slot 10
+						{x: this.x + 328, y: this.y + 50},	// slot 11
+						{x: this.x + 188, y: this.y + 50},	// slot 12
+						{x: this.x + 55, y: this.y + 119}	// slot 13
+					];
+
+					// for (housing in this.home_coordinates) {
+						// console.log("Housing is: (" + housing.x + "," + housing.y +")");
+						// console.log("Offset  is: (" + this.x + "," + this.y +")\n");
+					// }
+				},
+
+				update_board: function( xAxis , yAxis ) {
+					this.home_coordinates = [
+						{x: xAxis + 188, y: yAxis + 190},	// slot 0
+						{x: xAxis + 328, y: yAxis + 190},	// slot 1
+						{x: xAxis + 468, y: yAxis + 190},	// slot 2
+						{x: xAxis + 608, y: yAxis + 190},	// slot 3
+						{x: xAxis + 748, y: yAxis + 190},	// slot 4
+						{x: xAxis + 888, y: yAxis + 190},	// slot 5
+						{x: xAxis + 1022, y: yAxis + 119},		// slot 6 (store)
+						{x: xAxis + 888, y: yAxis + 50},	// slot 7
+						{x: xAxis + 748, y: yAxis + 50},	// slot 8
+						{x: xAxis + 608, y: yAxis + 50},	// slot 9
+						{x: xAxis + 468, y: yAxis + 50},	// slot 10
+						{x: xAxis + 328, y: yAxis + 50},	// slot 11
+						{x: xAxis + 188, y: yAxis + 50},	// slot 12
+						{x: xAxis + 55, y: yAxis + 119}			// slot 13 (store)
+					];
+				},
+
+				what_house: function(x, y) {
+					for (var i=0; i < this.home_coordinates.length; i++) {
+						if(i != 6 && i != 13) {
+							if(x >= this.home_coordinates[i].x && x <= this.home_coordinates[i].x + 125 &&
+								y >= this.home_coordinates[i].y && y <= this.home_coordinates[i].y + 125)
+								return i;
+						}
+					}
+					return -1;
+				},
+
+				what_coords: function(number){
+					return this.home_coordinates[number];
+				},
+
+				init_display: function(){
+					this.home_display = new Array(14);
+
+					// Lower homes
+					for(var i = 0; i < 6; i++){
+						// Text
+						this.home_display[i] = Crafty.e('2D, DOM, Text')
+						.attr({
+						  x: this.home_coordinates[i].x + 55,
+						  y: this.home_coordinates[i].y + 135
+						});
+						this.home_display[i].text(homes[i].length);
+
+						// Text Formatting
+						this.home_display[i].textColor('black');
+						this.home_display[i].textFont({
+							size: '25px',
+							weight: 'bold'
+						});
+					}
+
+					this.home_display[6] = Crafty.e('2D, DOM, Text')
+					.attr({
+					  x: this.home_coordinates[6].x + 57,
+					  y: this.home_coordinates[6].y + 157
+					});
+					this.home_display[6].text(homes[6].length);
+					// Text Formatting
+					this.home_display[6].textColor('black');
+					this.home_display[6].textFont({
+						size: '25px',
+						weight: 'bold'
+					});
+
+					this.home_display[13] = Crafty.e('2D, DOM, Text')
+					.attr({
+					  x: this.home_coordinates[13].x + 57,
+					  y: this.home_coordinates[13].y + 157
+					});
+					this.home_display[13].text(homes[13].length);
+					// Text Formatting
+					this.home_display[13].textColor('black');
+					this.home_display[13].textFont({
+						size: '25px',
+						weight: 'bold'
+					});
+
+					for(var i = 7; i < 13; i++){
+						// Text
+						this.home_display[i] = Crafty.e('2D, DOM, Text')
+						.attr({
+						  x: this.home_coordinates[i].x + 55,
+						  y: this.home_coordinates[i].y - 40
+						});
+						this.home_display[i].text(homes[i].length);
+
+						// Text Formatting
+						this.home_display[i].textColor('black');
+						this.home_display[i].textFont({
+							size: '25px',
+							weight: 'bold'
+						});
+					}
+
+				},
+
+				number_display: function(){
+					for(var i = 0; i < 14; i++){
+						this.home_display[i].text(homes[i].length);
+					}
+				}
+			});
+			Crafty.c("HideShow", {
+			    hide : function() {
+			        this.attr({
+			            z : 0,
+			            alpha : 0.01
+			        });
+			    },
+			 
+			    show : function() {
+			        this.attr({
+			            z : 2,
+			            alpha : 1
+			        });
+			    }
+			});
+			Crafty.c("Hand", {
+				activated: false,
+				remaining_moves: 0,
+				activate: function(home_no, home_coordinates) { // home_no = Home Clicked-on
+					if(this.remaining_moves != 0) {
+						this.x = home_coordinates[home_no].x;
+						this.y = home_coordinates[home_no].y;
+
+						// Ensures that the hand is drawn last
+						this.z = 100;
+	
+						this.resumeAnimation();
+						this.remaining_moves--;
+					} else this.activated = false;
+				},
+			});
+
+			// Object that contains all assets
+			var assets_obj = {
+				"sprites": {
+					"stones.png" : {
+						tile: 40,
+						tileh: 40,
+						map: {
+							first: [0, 0],
+							second: [1, 0],
+							third: [2, 0],
+							fourth: [3, 0],
+							fifth: [4, 0],
+							sixth: [5, 0],
+							seventh: [6, 0],
+							eighth: [7, 0],
+							ninth: [8, 0],
+							tenth: [9, 0]
+						}
+					},
+					"board.png" : {
+						tile: 1200,
+						tileh: 363,
+						map: {
+							whole: [0, 0]
+						}
+					},
+					"hand.png" : {
+						tile: 90,
+						tileh: 60,
+						map: {
+							first_gesture: [0, 0],
+							last_gesture:[7, 0]
+						}
+					}
+				}
+			}
+
+			// Main loop
+			Crafty.load(assets_obj, function() {
+				var game = Crafty.e("2D, Canvas, whole, GameBoard, Mouse")
+				.attr({x: 0, y: 0}) // For Testing
+				.bind("Click", function(e) {
+					// Updated
+					if (player == 1){
+						if(!hand.activated) {
+							clicked_house = this.what_house(e.clientX, e.clientY);
+							if(i != 6) {
+								if(clicked_house != -1)
+									STONES_TO_DISTRIB = homes[clicked_house];
+									for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
+									 	homes[clicked_house][i].hide();
+									 	CURRENT_HOME = clicked_house;
+									 	hand.reelPosition(0);
+									 	hand.activated = true;
+										hand.remaining_moves = homes[clicked_house].length+1;
+										hand.activate(clicked_house,game.home_coordinates); 
+									};
+									MOVE_DONE = true;
+							}
+						}
+					}
+				});
+
+				// Call this whenever Entity's coordinates are changed to fix the board
+				game.update_board(game.x,game.y);
+				game.init_display();
+
+				//Loops on every home
+				for(var i=0; i<14; i++) {
+					
+					//Checks if i is "store"
+					if(i != 6 && i != 13) {
+						var x, y, dist;
+						for(var j=0; j<4; j++) {
+							while (true) {
+								x = Math.round((Math.random() * 85));
+								y = Math.round((Math.random() * 85));
+
+
+								dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+								if (dist <= 40)
+									break;
+							}
+							x += game.home_coordinates[i].x;
+							y += game.home_coordinates[i].y;
+
+							var random_num = Math.floor((Math.random() * 10)+1);
+							switch (random_num) {
+								case 1:
+									homes[i].push(Crafty.e("2D, Canvas, first, HideShow").attr({x: x, y: y}));
+									break;
+								case 2:
+									homes[i].push(Crafty.e("2D, Canvas, second, HideShow").attr({x: x, y: y}));
+									break;
+								case 3:
+									homes[i].push(Crafty.e("2D, Canvas, third, HideShow").attr({x: x, y: y}));
+									break;
+								case 4:
+									homes[i].push(Crafty.e("2D, Canvas, fourth, HideShow").attr({x: x, y: y}));
+									break;
+								case 5:
+									homes[i].push(Crafty.e("2D, Canvas, fifth, HideShow").attr({x: x, y: y}));
+									break;
+								case 6:
+									homes[i].push(Crafty.e("2D, Canvas, sixth, HideShow").attr({x: x, y: y}));
+									break;
+								case 7:
+									homes[i].push(Crafty.e("2D, Canvas, seventh, HideShow").attr({x: x, y: y}));
+									break;
+								case 8:
+									homes[i].push(Crafty.e("2D, Canvas, eighth, HideShow").attr({x: x, y: y}));
+									break;
+								case 9:
+									homes[i].push(Crafty.e("2D, Canvas, ninth, HideShow").attr({x: x, y: y}));
+									break;
+								case 10:
+									homes[i].push(Crafty.e("2D, Canvas, tenth, HideShow").attr({x: x, y: y}));
+									break;
+							}
+						}
+					}
+				}
+
+				// Active zone for 'game'
+				game.bind("EnterFrame", function() {
+					// Call this whenever Entity's coordinates are changed to fix the board
+					this.update_board(this.x,this.y);
+					this.number_display();
+				});
+
+				var hand = Crafty.e('2D, Canvas, first_gesture, SpriteAnimation, Hand, Mouse')
+					.reel("putting", 1000, [
+					[0, 0], [1, 0], [2, 0], [3, 0],
+					[4, 0], [5, 0], [6, 0], [7, 0]
+					])
+					.attr({x: game.x + 100, y: game.y + 100}) // Let's hand position be relative to the "Game" Entity
+					.animate("putting", -1);
+
+				hand.bind("EnterFrame", function() {
+					//COMPUTER OPPONENT
+					if (player == 2){
+						if(!hand.activated) {
+							clicked_house = getMoves();
+							console.log("PLAYER 2's turn " + clicked_house);
+							if(i != 6) {
+								if(clicked_house != -1)
+									STONES_TO_DISTRIB = homes[clicked_house];
+									for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
+									 	homes[clicked_house][i].hide();
+									 	CURRENT_HOME = clicked_house;
+									 	hand.reelPosition(0);
+									 	hand.activated =  true;
+										hand.remaining_moves = homes[clicked_house].length+1;
+										hand.activate(clicked_house, game.home_coordinates);
+									};
+									MOVE_DONE = true;
+							}
+						}
+					}
+
+					if(this.reelPosition() > 6 && this.remaining_moves != 0) {
+						this.reelPosition(0);
+						this.pauseAnimation();
+						++CURRENT_HOME
+						CURRENT_HOME %= 14;
+						var stone = STONES_TO_DISTRIB.pop();
+						var x, y;
+						while (true) {
+							x = Math.round((Math.random() * 85));
+							y = Math.round((Math.random() * 85));
+							dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+							if (dist <= 40)
+								break;
+						}
+						stone.x = x + game.home_coordinates[CURRENT_HOME].x;
+						stone.y = y + game.home_coordinates[CURRENT_HOME].y;
+						stone.show();
+						homes[CURRENT_HOME].push(stone);
+						this.activate(CURRENT_HOME, game.home_coordinates);
+					}
+					if(this.remaining_moves == 0){
+						this.activated = false;
+						//NEW
+						if (MOVE_DONE){
+							player = NEXT_PLAYER(CURRENT_HOME, player);
+							console.log("Player " + player);
+						}
+						MOVE_DONE = false;
+					}
+
+					// Old code
+					/*if(this.reelPosition() > 6 && this.remaining_moves != 0) {
+						this.reelPosition(0);
+						this.pauseAnimation();
+						++CURRENT_HOME;
+						CURRENT_HOME %= 14;
+
+						console.log(CURRENT_HOME);
+
+						var stone = STONES_TO_DISTRIB.pop();
+						var x, y;
+						while (true) {
+							x = Math.round((Math.random() * 85));
+							y = Math.round((Math.random() * 85));
+							dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+							if (dist <= 40)
+								break;
+						}
+						stone.x = x + game.home_coordinates[CURRENT_HOME].x;
+						stone.y = y + game.home_coordinates[CURRENT_HOME].y;
+						stone.show();
+						homes[CURRENT_HOME].push(stone);
+						this.activate(CURRENT_HOME, game.home_coordinates);
+					}
+					if(this.remaining_moves == 0)
+						this.activated = false;*/
+				});
+
+				function NEXT_PLAYER(stopped_at,player){
+					if (player == 1){
+						if (stopped_at == 6)
+							return player;
+						else return 2;
+					}
+					else if (player == 2){
+						if (stopped_at == 13)
+							return player;
+						else return 1;
+					}
+				}
+
+			});
+			
+		</script>
+	</body>
+</html>
