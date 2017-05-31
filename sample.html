@@ -1,13 +1,47 @@
 <html>
 	<head>
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
 		<style>
             body {
                 margin: 0;
+                background-color: #b05e38;
+            }
+            #game{
+            	top: 5%;
+            	left: 6%;
             }
         </style>
 	</head>
 	<body>
-		<div id="game"></div>
+		<nav class="navbar navbar-inverse" style="background-color: black">
+		  <div class="container-fluid">
+		    <div class="navbar-header">
+		      <a class="navbar-brand" href="#" style="font-size: 25px; color: white"><b>B A N T U M I</b></a>
+		    </div>
+		    <ul class="nav navbar-nav">
+		    </ul>
+		    <button class="btn btn-primary navbar-btn" style="float: right;">Back to Home</button>
+		    <button class="btn btn-primary navbar-btn" style="float: right; margin-right: 10px">New Game</button>
+		  </div>
+		</nav>
+
+		<nav class="navbar navbar-inverse navbar-fixed-bottom" style="background-color: black">
+		  <div class="container-fluid">
+		    <div class="navbar-header">
+		      <a class="navbar-brand" href="#"></a>
+		    </div>
+		    <span style="float: left;"><h3 style="margin: 0px; margin-top: 10px; color: white; padding: 0px">BOT : 	0</h3></span>
+		    <span style="float: right;"><h3 style="margin: 0px; margin-top: 10px; color: white; padding: 0px">Player Name :	0</h3></span>
+		    <ul class="nav navbar-nav">
+		    </ul>
+		  </div>
+		</nav>
+
+
+		<div id="game" style="text-align: center;" ></div>
+		<span id="turn"><h2 style="margin:0px;margin-top: 70px; margin-right: 50px; color: black; text-align: center;"><b>Player One's Turn</b></h2></span>
+
 		<script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
 		<script>
 			Crafty.init(1200,363, document.getElementById('game'));
@@ -476,4 +510,6 @@
 			
 		</script>
 	</body>
+	<script type="text/javascript" src = "bootstrap/js/bootstrap.js"></script>
+	<script type="text/javascript" src= "bootsrap/js/bootsrap.min.js" ></script>
 </html>
