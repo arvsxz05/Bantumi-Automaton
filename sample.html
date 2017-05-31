@@ -49,6 +49,9 @@
 			var STONE_DIAMETER = 40;
 			var STONE_RADIUS = STONE_DIAMETER/2;
 			var stone_holder = new Array(24);
+
+			var xOffset = 115;
+			var yOffset = 101;
 			
 			// Holds arrays of Stones for each Home
 			var homes = new Array(14);
@@ -157,8 +160,8 @@
 				what_house: function(x, y) {
 					for (var i=0; i < this.home_coordinates.length; i++) {
 						if(i != 6 && i != 13) {
-							if(x >= this.home_coordinates[i].x && x <= this.home_coordinates[i].x + 125 &&
-								y >= this.home_coordinates[i].y && y <= this.home_coordinates[i].y + 125)
+							if((x >= this.home_coordinates[i].x + xOffset) && (x <= this.home_coordinates[i].x + 125 + xOffset) &&
+								y >= (this.home_coordinates[i].y + yOffset) && (y <= this.home_coordinates[i].y + 125 + yOffset))
 								return i;
 						}
 					}
