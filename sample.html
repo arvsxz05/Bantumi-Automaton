@@ -45,7 +45,6 @@
 		<script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
 		<script>
 			Crafty.init(1200,363, document.getElementById('game'));
-
 			//Stone math info
 			var STONE_DIAMETER = 40;
 			var STONE_RADIUS = STONE_DIAMETER/2;
@@ -59,50 +58,53 @@
 			for (var i = 0; i < 14; i++) {
 				homes[i] = [];
 			};
-
 			//new variables
 			var player = 1;
 			var MOVE_DONE = false;
 			for (var i = 0; i < 14; i++) {
 				homes[i] = [];
 			};
-
+			var forSteal = 0;
+			var steal = false, changed_players=false;
 			/*
 				FOR COMPUTER OPPONENT
 			*/
-
 			var moves = [];
 			function getMoves(){
-				moves = [];
-				var randMoves = []
-				for (var i = 12; i > 6; i--){
-					if (i + homes[i].length == 13){
-						moves.push(i);
-					}
+				// console.log("------------------------------------");
+				// console.log("*****************************" + homes[9].length);
+				var move = -1;
+				for (var i=12; i>6; i--){
 					if (homes[i].length > 0){
-						randMoves.push(i);
-					}
-				}
-				if (moves.length < 3){
-					var scores = [];
-					var index;
-					//for steal
-					for (var i = 0; i < 6; i++){
-						if (homes[i] > 0 && homes[(homes[12-i] + (12-i))]){
-					 		scores.push(arr[12-i] + 1);
-					 	}
-					}
-					if (scores.length > 0){
-						index = scores.indexOf(Math.max(...scores));
-					}
-					else{
-						moves.push(randMoves[Math.floor(Math.random()*randMoves.length)]);
-					}
-					// moves.push(randMoves[Math.floor(Math.random()*randMoves.length)]);
-				}
-				return moves[0];
-			}
+						if (i + homes[i].length == 13) {
+							move = i;
+							break;
+						};
+					};
+				};
+				if (move < 0) {
+					// console.log("HEEERREEEEE");
+					for(var i=7; i<13; i++) {
+						if (homes[i].length == 0) {
+							for(var j=i-1; j>6; j--) {
+								if (homes[j].length + j == i) {
+									// console.log("huhuhuuhhuuhuh " + j);
+									move = j;
+									break;
+								};
+							};
+						};
+					};
+				};
+				if (move < 0) {
+					move = Math.floor((Math.random() * 6) + 7);
+					// console.log("++++++++++++++++++++++++++++++++ " + move)
+					while(homes[move].length < 1)
+						move = Math.floor((Math.random() * 6) + 7);
+				};
 
+				return move;
+			}
 			Crafty.c("Stone", {
 				home_number: 0,
 				change_home: function(new_home) {
@@ -112,7 +114,6 @@
 			Crafty.c("GameBoard", {
 				home_coordinates: null,
 				home_display: null,	// Array for holding display slots
-
 				init: function(){
 					this.home_coordinates = [
 						{x: this.x + 188, y: this.y + 190},	// slot 0
@@ -130,13 +131,11 @@
 						{x: this.x + 188, y: this.y + 50},	// slot 12
 						{x: this.x + 55, y: this.y + 119}	// slot 13
 					];
-
 					// for (housing in this.home_coordinates) {
 						// console.log("Housing is: (" + housing.x + "," + housing.y +")");
 						// console.log("Offset  is: (" + this.x + "," + this.y +")\n");
 					// }
 				},
-
 				update_board: function( xAxis , yAxis ) {
 					this.home_coordinates = [
 						{x: xAxis + 188, y: yAxis + 190},	// slot 0
@@ -155,7 +154,6 @@
 						{x: xAxis + 55, y: yAxis + 119}			// slot 13 (store)
 					];
 				},
-
 				what_house: function(x, y) {
 					for (var i=0; i < this.home_coordinates.length; i++) {
 						if(i != 6 && i != 13) {
@@ -166,14 +164,11 @@
 					}
 					return -1;
 				},
-
 				what_coords: function(number){
 					return this.home_coordinates[number];
 				},
-
 				init_display: function(){
 					this.home_display = new Array(14);
-
 					// Lower homes
 					for(var i = 0; i < 6; i++){
 						// Text
@@ -183,7 +178,6 @@
 						  y: this.home_coordinates[i].y + 135
 						});
 						this.home_display[i].text(homes[i].length);
-
 						// Text Formatting
 						this.home_display[i].textColor('black');
 						this.home_display[i].textFont({
@@ -191,7 +185,6 @@
 							weight: 'bold'
 						});
 					}
-
 					this.home_display[6] = Crafty.e('2D, DOM, Text')
 					.attr({
 					  x: this.home_coordinates[6].x + 57,
@@ -204,7 +197,6 @@
 						size: '25px',
 						weight: 'bold'
 					});
-
 					this.home_display[13] = Crafty.e('2D, DOM, Text')
 					.attr({
 					  x: this.home_coordinates[13].x + 57,
@@ -217,7 +209,6 @@
 						size: '25px',
 						weight: 'bold'
 					});
-
 					for(var i = 7; i < 13; i++){
 						// Text
 						this.home_display[i] = Crafty.e('2D, DOM, Text')
@@ -226,7 +217,6 @@
 						  y: this.home_coordinates[i].y - 40
 						});
 						this.home_display[i].text(homes[i].length);
-
 						// Text Formatting
 						this.home_display[i].textColor('black');
 						this.home_display[i].textFont({
@@ -234,9 +224,7 @@
 							weight: 'bold'
 						});
 					}
-
 				},
-
 				number_display: function(){
 					for(var i = 0; i < 14; i++){
 						this.home_display[i].text(homes[i].length);
@@ -265,7 +253,6 @@
 					if(this.remaining_moves != 0) {
 						this.x = home_coordinates[home_no].x;
 						this.y = home_coordinates[home_no].y;
-
 						// Ensures that the hand is drawn last
 						this.z = 100;
 	
@@ -274,7 +261,6 @@
 					} else this.activated = false;
 				},
 			});
-
 			// Object that contains all assets
 			var assets_obj = {
 				"sprites": {
@@ -311,37 +297,32 @@
 					}
 				}
 			}
-
 			// Main loop
 			Crafty.load(assets_obj, function() {
 				var game = Crafty.e("2D, Canvas, whole, GameBoard, Mouse")
 				.attr({x: 0, y: 0}) // For Testing
 				.bind("Click", function(e) {
 					// Updated
-					if (player == 1){
-						if(!hand.activated) {
-							clicked_house = this.what_house(e.clientX, e.clientY);
-							if(i != 6) {
-								if(clicked_house != -1)
-									STONES_TO_DISTRIB = homes[clicked_house];
-									for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
-									 	homes[clicked_house][i].hide();
-									 	CURRENT_HOME = clicked_house;
-									 	hand.reelPosition(0);
-									 	hand.activated = true;
-										hand.remaining_moves = homes[clicked_house].length+1;
-										hand.activate(clicked_house,game.home_coordinates); 
-									};
-									MOVE_DONE = true;
-							}
-						}
-					}
+					if (player == 1 && !hand.activated) {
+						clicked_house = this.what_house(e.clientX, e.clientY);
+						if(clicked_house != -1  && !(clicked_house >= 6 && clicked_house <= 13)) {
+							STONES_TO_DISTRIB = homes[clicked_house];
+							for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
+							 	homes[clicked_house][i].hide();
+							 	CURRENT_HOME = clicked_house;
+							 	hand.reelPosition(0);
+							 	hand.activated = true;
+								hand.remaining_moves = homes[clicked_house].length+1;
+								hand.activate(clicked_house,game.home_coordinates); 
+								changed_players = false;
+							};
+							MOVE_DONE = true;
+						};
+					};
 				});
-
 				// Call this whenever Entity's coordinates are changed to fix the board
 				game.update_board(game.x,game.y);
 				game.init_display();
-
 				//Loops on every home
 				for(var i=0; i<14; i++) {
 					
@@ -352,15 +333,12 @@
 							while (true) {
 								x = Math.round((Math.random() * 85));
 								y = Math.round((Math.random() * 85));
-
-
 								dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
 								if (dist <= 40)
 									break;
 							}
 							x += game.home_coordinates[i].x;
 							y += game.home_coordinates[i].y;
-
 							var random_num = Math.floor((Math.random() * 10)+1);
 							switch (random_num) {
 								case 1:
@@ -397,14 +375,12 @@
 						}
 					}
 				}
-
 				// Active zone for 'game'
 				game.bind("EnterFrame", function() {
 					// Call this whenever Entity's coordinates are changed to fix the board
 					this.update_board(this.x,this.y);
 					this.number_display();
 				});
-
 				var hand = Crafty.e('2D, Canvas, first_gesture, SpriteAnimation, Hand, Mouse')
 					.reel("putting", 1000, [
 					[0, 0], [1, 0], [2, 0], [3, 0],
@@ -412,34 +388,35 @@
 					])
 					.attr({x: game.x + 100, y: game.y + 100}) // Let's hand position be relative to the "Game" Entity
 					.animate("putting", -1);
-
 				hand.bind("EnterFrame", function() {
 					//COMPUTER OPPONENT
-					if (player == 2){
-						if(!hand.activated) {
-							clicked_house = getMoves();
-							console.log("PLAYER 2's turn " + clicked_house);
-							if(i != 6) {
-								if(clicked_house != -1)
-									STONES_TO_DISTRIB = homes[clicked_house];
-									for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
-									 	homes[clicked_house][i].hide();
-									 	CURRENT_HOME = clicked_house;
-									 	hand.reelPosition(0);
-									 	hand.activated =  true;
-										hand.remaining_moves = homes[clicked_house].length+1;
-										hand.activate(clicked_house, game.home_coordinates);
-									};
-									MOVE_DONE = true;
-							}
-						}
-					}
-
+					if (player == 2 && !hand.activated) {
+						clicked_house = getMoves();
+						console.log("PLAYER 2's turn " + clicked_house);
+						if(clicked_house != -1  && !(clicked_house >= 0 && clicked_house <= 6 || clicked_house == 13)) {
+							STONES_TO_DISTRIB = homes[clicked_house];
+							for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
+							 	homes[clicked_house][i].hide();
+							 	CURRENT_HOME = clicked_house;
+							 	hand.reelPosition(0);
+							 	hand.activated =  true;
+								hand.remaining_moves = homes[clicked_house].length+1;
+								hand.activate(clicked_house, game.home_coordinates);
+								changed_players = false;
+							};
+							MOVE_DONE = true;
+						};
+					};
 					if(this.reelPosition() > 6 && this.remaining_moves != 0) {
 						this.reelPosition(0);
 						this.pauseAnimation();
 						++CURRENT_HOME
 						CURRENT_HOME %= 14;
+						if(player == 1 && CURRENT_HOME == 13) {
+							CURRENT_HOME = 0;
+						} else if(player == 2 && CURRENT_HOME == 6) {
+							CURRENT_HOME = 7;
+						};
 						var stone = STONES_TO_DISTRIB.pop();
 						var x, y;
 						while (true) {
@@ -456,24 +433,117 @@
 						this.activate(CURRENT_HOME, game.home_coordinates);
 					}
 					if(this.remaining_moves == 0){
-						this.activated = false;
-						//NEW
-						if (MOVE_DONE){
-							player = NEXT_PLAYER(CURRENT_HOME, player);
-							console.log("Player " + player);
+						if(((homes[CURRENT_HOME].length == 1 && homes[Math.abs(CURRENT_HOME-12)].length != 0 && (CURRENT_HOME != 6 && CURRENT_HOME != 13)) || steal) && ((player == 1 && (CURRENT_HOME >= 0 && CURRENT_HOME <= 5)) || (player == 2 && (CURRENT_HOME >= 7 && CURRENT_HOME <= 13))) && !changed_players) {
+								hand.activated =  true;
+								// console.log("here " + player + " " + CURRENT_HOME);
+								if(forSteal == 0) {
+									console.log("here " + player + " " + CURRENT_HOME);
+									this.reelPosition(0);
+									homes[CURRENT_HOME][0].hide();
+									forSteal = 2;
+									steal = true;
+								};
+								if (forSteal == 2 && this.reelPosition() > 6) {				// second part
+									this.reelPosition(0);
+									if(CURRENT_HOME >= 0 && CURRENT_HOME <= 5) {
+										this.x = game.home_coordinates[6].x;
+										this.y = game.home_coordinates[6].y;
+									};
+									if(CURRENT_HOME >= 7 && CURRENT_HOME <= 12) {
+										this.x = game.home_coordinates[13].x;
+										this.y = game.home_coordinates[13].y;
+									};
+									var stone = homes[CURRENT_HOME].pop()
+									var x, y;
+									while (true) {
+										x = Math.round((Math.random() * 85));
+										y = Math.round((Math.random() * 85));
+										dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+										if (dist <= 40)
+											break;
+									};
+									if(CURRENT_HOME >= 0 && CURRENT_HOME <= 5) {
+										stone.x = x + game.home_coordinates[6].x;
+										stone.y = y + game.home_coordinates[6].y;
+										homes[6].push(stone);
+									};
+									if(CURRENT_HOME >= 7 && CURRENT_HOME <= 12) {
+										stone.x = x + game.home_coordinates[13].x;
+										stone.y = y + game.home_coordinates[13].y;
+										homes[13].push(stone);
+									};
+									stone.show();
+									forSteal = 3;
+								};
+								if (forSteal == 3 && this.reelPosition() > 6) {					// third part
+									this.reelPosition(0);
+									this.x = game.home_coordinates[Math.abs(CURRENT_HOME-12)].x
+									this.y = game.home_coordinates[Math.abs(CURRENT_HOME-12)].y
+									for (var i = homes[Math.abs(CURRENT_HOME-12)].length - 1; i >= 0; i--) {
+										homes[Math.abs(CURRENT_HOME-12)][i].hide();
+									};
+									forSteal = 4;
+								};
+								if (forSteal == 4 && this.reelPosition() > 5) { 				// fourth part
+									this.reelPosition(0);
+									if(CURRENT_HOME >= 0 && CURRENT_HOME <= 5) {
+										this.x = game.home_coordinates[6].x;
+										this.y = game.home_coordinates[6].y;
+									};
+									if(CURRENT_HOME >= 7 && CURRENT_HOME <= 12) {
+										this.x = game.home_coordinates[13].x;
+										this.y = game.home_coordinates[13].y;
+									};
+									for (var i = homes[Math.abs(CURRENT_HOME-12)].length - 1; i >= 0; i--) {
+										
+										var stone = homes[Math.abs(CURRENT_HOME-12)].pop()
+										var x, y;
+										while (true) {
+											x = Math.round((Math.random() * 85));
+											y = Math.round((Math.random() * 85));
+											dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+											if (dist <= 40)
+												break;
+										};
+										if(CURRENT_HOME >= 0 && CURRENT_HOME <= 5) {
+											stone.x = x + game.home_coordinates[6].x;
+											stone.y = y + game.home_coordinates[6].y;
+											homes[6].push(stone);
+										};
+										if(CURRENT_HOME >= 7 && CURRENT_HOME <= 12) {
+											stone.x = x + game.home_coordinates[13].x;
+											stone.y = y + game.home_coordinates[13].y;
+											homes[13].push(stone);
+										};
+										stone.show();
+									};
+									forSteal = 0;
+									this.activated = false;
+									steal = false;
+									if (MOVE_DONE) {
+										player = NEXT_PLAYER(CURRENT_HOME, player);
+										console.log("Player " + player);
+									}
+									MOVE_DONE = false;
+								};
 						}
-						MOVE_DONE = false;
-					}
+						else {
+							this.activated = false;
 
+							if (MOVE_DONE) {
+								player = NEXT_PLAYER(CURRENT_HOME, player);
+								console.log("Player " + player);
+							}
+							MOVE_DONE = false;
+						};
+					}
 					// Old code
 					/*if(this.reelPosition() > 6 && this.remaining_moves != 0) {
 						this.reelPosition(0);
 						this.pauseAnimation();
 						++CURRENT_HOME;
 						CURRENT_HOME %= 14;
-
 						console.log(CURRENT_HOME);
-
 						var stone = STONES_TO_DISTRIB.pop();
 						var x, y;
 						while (true) {
@@ -492,8 +562,8 @@
 					if(this.remaining_moves == 0)
 						this.activated = false;*/
 				});
-
 				function NEXT_PLAYER(stopped_at,player){
+					changed_players = true;
 					if (player == 1){
 						if (stopped_at == 6)
 							return player;
@@ -505,9 +575,7 @@
 						else return 1;
 					}
 				}
-
-			});
-			
+			});			
 		</script>
 	</body>
 	<script type="text/javascript" src = "bootstrap/js/bootstrap.js"></script>
