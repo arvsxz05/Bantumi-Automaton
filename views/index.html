@@ -1,0 +1,677 @@
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css">
+  <style>
+    body {
+                    margin: 0;
+                    background-color: #b05e38;
+                }
+                #game{
+                  top: 10%;
+                  left: 6%;
+                }
+  </style>
+  <title>Let's Play Bantumi!</title>
+</head>
+
+<body>
+  <nav class="navbar navbar-inverse" style="background-color: black">
+    <div class="container-fluid">
+      <div class="navbar-header"> <a class="navbar-brand" href="#" style="font-size: 25px; color: white"><b>B A N T U M I</b></a>
+      </div>
+      <ul class="nav navbar-nav"></ul>
+      <button class="btn btn-primary navbar-btn" style="float: right;" id="htp">How to play</button>
+      <button class="btn btn-primary navbar-btn" style="float: right; margin-right: 10px" id="ng">New Game</button>
+    </div>
+  </nav>
+  <nav class="navbar navbar-inverse navbar-fixed-bottom" style="background-color: black">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#"></a>
+      </div> <span style="float: left;"><h3 style="margin: 0px; margin-top: 10px; color: white; padding: 0px; margin-bottom: 10px" id="bot_score">0</h3><h3 style="margin: 0px; margin-top: 10px; color: white; padding: 0px">Player 2 (bot)</h3></span>
+      <span style="float: right;"><h3 style="margin: 0px; margin-top: 10px; color: white; padding: 0px; margin-bottom: 10px" id="player_score">0</h3><h3 style="margin: 0px; margin-top: 10px; color: white; padding: 0px">Player 1 (human)</h3></span>
+      <span style="text-align: center;"><h3 style="margin: 0px; margin-top: 10px; color: white; padding: 0px" id="message"></h3></span>
+      <ul class="nav navbar-nav"></ul>
+    </div>
+  </nav>
+  <div id="game"></div> <span id="turn"><h2 style="margin:0px;margin-top: 70px; margin-right: 50px; color: black; text-align: center;" id="turn"><b></b></h2></span>
+  <script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
+  <script>
+    Crafty.init(1200,363, document.getElementById('game'));
+    
+    Crafty.audio.add({
+      back_music: ["/static/Audio/background_music.wav"],
+      pick: ["/static/Audio/pick.wav"]
+    });
+    Crafty.audio.play("back_music", -1, 0.3);
+
+    Crafty.defineScene("Main", function() {
+      var STONE_DIAMETER = 40;
+      var STONE_RADIUS = STONE_DIAMETER/2;
+      var stone_holder = new Array(24);
+
+      var xOffset = 115;
+      var yOffset = 101;
+      
+      // Holds arrays of Stones for each Home
+      var homes = new Array(14);
+      var done = false;
+      
+      var CURRENT_HOME = 0;
+      var STONES_TO_DISTRIB;
+      for (var i = 0; i < 14; i++) {
+        homes[i] = [];
+      };
+      //new variables
+      var player = 1;
+      var MOVE_DONE = false;
+      for (var i = 0; i < 14; i++) {
+        homes[i] = [];
+      };
+      var forSteal = 0;
+      var steal = false, changed_players=false;
+      var NO_SEEDS_1=24, NO_SEEDS_2=24;
+      /*
+        FOR COMPUTER OPPONENT
+      */
+      var moves = [];
+      function getMoves(){
+        var move = -1;
+        for (var i=12; i>6; i--){
+          if (homes[i].length > 0){
+            if (i + homes[i].length == 13) {
+              move = i;
+              break;
+            };
+          };
+        };
+        if (move < 0) {
+          for(var i=7; i<13; i++) {
+            if (homes[i].length == 0) {
+              for(var j=i-1; j>6; j--) {
+                if (homes[j].length + j == i) {
+                  move = j;
+                  break;
+                };
+              };
+              if(move < 0) {
+                for (var j = 12; j > i; j--) {
+                  if(homes[j].length+j%14 == i) {
+                    move = j;
+                    break;
+                  };
+                };
+              };
+            };
+          };
+        };
+        if (move < 0) {
+          move = Math.floor((Math.random() * 6) + 7);
+          while(homes[move].length < 1)
+            move = Math.floor((Math.random() * 6) + 7);
+        };
+        return move;
+      }
+      Crafty.c("Stone", {
+        home_number: 0,
+        change_home: function(new_home) {
+          this.home_number = new_home;
+        }
+      });
+      Crafty.c("GameBoard", {
+        home_coordinates: null,
+        home_display: null, // Array for holding display slots
+        init: function(){
+          this.home_coordinates = [
+            {x: this.x + 188, y: this.y + 190}, // slot 0
+            {x: this.x + 328, y: this.y + 190}, // slot 1
+            {x: this.x + 468, y: this.y + 190}, // slot 2
+            {x: this.x + 608, y: this.y + 190}, // slot 3
+            {x: this.x + 748, y: this.y + 190}, // slot 4
+            {x: this.x + 888, y: this.y + 190}, // slot 5
+            {x: this.x + 1022, y: this.y + 119},// slot 6
+            {x: this.x + 888, y: this.y + 50},  // slot 7
+            {x: this.x + 748, y: this.y + 50},  // slot 8
+            {x: this.x + 608, y: this.y + 50},  // slot 9
+            {x: this.x + 468, y: this.y + 50},  // slot 10
+            {x: this.x + 328, y: this.y + 50},  // slot 11
+            {x: this.x + 188, y: this.y + 50},  // slot 12
+            {x: this.x + 55, y: this.y + 119} // slot 13
+          ];
+          
+        },
+        update_board: function( xAxis , yAxis ) {
+          this.home_coordinates = [
+            {x: xAxis + 188, y: yAxis + 190}, // slot 0
+            {x: xAxis + 328, y: yAxis + 190}, // slot 1
+            {x: xAxis + 468, y: yAxis + 190}, // slot 2
+            {x: xAxis + 608, y: yAxis + 190}, // slot 3
+            {x: xAxis + 748, y: yAxis + 190}, // slot 4
+            {x: xAxis + 888, y: yAxis + 190}, // slot 5
+            {x: xAxis + 1022, y: yAxis + 119},    // slot 6 (store)
+            {x: xAxis + 888, y: yAxis + 50},  // slot 7
+            {x: xAxis + 748, y: yAxis + 50},  // slot 8
+            {x: xAxis + 608, y: yAxis + 50},  // slot 9
+            {x: xAxis + 468, y: yAxis + 50},  // slot 10
+            {x: xAxis + 328, y: yAxis + 50},  // slot 11
+            {x: xAxis + 188, y: yAxis + 50},  // slot 12
+            {x: xAxis + 55, y: yAxis + 119}     // slot 13 (store)
+          ];
+        },
+        what_house: function(x, y) {
+          for (var i=0; i < this.home_coordinates.length; i++) {
+            if(i != 6 && i != 13) {
+              if((x >= this.home_coordinates[i].x + xOffset) && (x <= this.home_coordinates[i].x + 125 + xOffset) &&
+                y >= (this.home_coordinates[i].y + yOffset) && (y <= this.home_coordinates[i].y + 125 + yOffset))
+                return i;
+            }
+          }
+          return -1;
+        },
+        what_coords: function(number){
+          return this.home_coordinates[number];
+        },
+        init_display: function(){
+          this.home_display = new Array(14);
+          // Lower homes
+          for(var i = 0; i < 6; i++){
+            // Text
+            this.home_display[i] = Crafty.e('2D, DOM, Text')
+            .attr({
+              x: this.home_coordinates[i].x + 55,
+              y: this.home_coordinates[i].y + 135
+            });
+            this.home_display[i].text(homes[i].length);
+            // Text Formatting
+            this.home_display[i].textColor('black');
+            this.home_display[i].textFont({
+              size: '25px',
+              weight: 'bold'
+            });
+          }
+          this.home_display[6] = Crafty.e('2D, DOM, Text')
+          .attr({
+            x: this.home_coordinates[6].x + 57,
+            y: this.home_coordinates[6].y + 157
+          });
+          this.home_display[6].text(homes[6].length);
+          // Text Formatting
+          this.home_display[6].textColor('black');
+          this.home_display[6].textFont({
+            size: '25px',
+            weight: 'bold'
+          });
+          this.home_display[13] = Crafty.e('2D, DOM, Text')
+          .attr({
+            x: this.home_coordinates[13].x + 57,
+            y: this.home_coordinates[13].y + 157
+          });
+          this.home_display[13].text(homes[13].length);
+          // Text Formatting
+          this.home_display[13].textColor('black');
+          this.home_display[13].textFont({
+            size: '25px',
+            weight: 'bold'
+          });
+          for(var i = 7; i < 13; i++){
+            // Text
+            this.home_display[i] = Crafty.e('2D, DOM, Text')
+            .attr({
+              x: this.home_coordinates[i].x + 55,
+              y: this.home_coordinates[i].y - 40
+            });
+            this.home_display[i].text(homes[i].length);
+            // Text Formatting
+            this.home_display[i].textColor('black');
+            this.home_display[i].textFont({
+              size: '25px',
+              weight: 'bold'
+            });
+          }
+        },
+        number_display: function(){
+          for(var i = 0; i < 14; i++){
+            this.home_display[i].text(homes[i].length);
+          }
+        }
+      });
+      Crafty.c("HideShow", {
+          hide : function() {
+              this.attr({
+                  z : 0,
+                  alpha : 0.01
+              });
+          },
+       
+          show : function() {
+              this.attr({
+                  z : 2,
+                  alpha : 1
+              });
+          }
+      });
+      Crafty.c("Hand", {
+        activated: false,
+        remaining_moves: 0,
+        activate: function(home_no, home_coordinates) { // home_no = Home Clicked-on
+          if(this.remaining_moves != 0) {
+            this.x = home_coordinates[home_no].x;
+            this.y = home_coordinates[home_no].y;
+            // Ensures that the hand is drawn last
+            this.z = 100;
+  
+            this.resumeAnimation();
+            this.remaining_moves--;
+          } else this.activated = false;
+        },
+      });
+      // Object that contains all assets
+      var assets_obj = {
+        "sprites": {
+          "/static/Images/stones.png" : {
+            tile: 40,
+            tileh: 40,
+            map: {
+              first: [0, 0],
+              second: [1, 0],
+              third: [2, 0],
+              fourth: [3, 0],
+              fifth: [4, 0],
+              sixth: [5, 0],
+              seventh: [6, 0],
+              eighth: [7, 0],
+              ninth: [8, 0],
+              tenth: [9, 0]
+            }
+          },
+          "/static/Images/board.png" : {
+            tile: 1200,
+            tileh: 363,
+            map: {
+              whole: [0, 0]
+            }
+          },
+          "/static/Images/hand.png" : {
+            tile: 90,
+            tileh: 60,
+            map: {
+              first_gesture: [0, 0],
+              last_gesture:[7, 0]
+            }
+          }
+        }
+      }
+      // Main loop
+      Crafty.load(assets_obj, function() {
+        var game = Crafty.e("2D, Canvas, whole, GameBoard, Mouse")
+        .attr({x: 0, y: 0}) // For Testing
+        .bind("Click", function(e) {
+          // Updated
+          if (player == 1 && !hand.activated) {
+            clicked_house = this.what_house(e.clientX, e.clientY);
+            if(clicked_house != -1  && !(clicked_house >= 6 && clicked_house <= 13)) {
+              STONES_TO_DISTRIB = homes[clicked_house];
+              for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
+                homes[clicked_house][i].hide();
+                CURRENT_HOME = clicked_house;
+                hand.reelPosition(0);
+                hand.activated = true;
+                hand.remaining_moves = homes[clicked_house].length+1;
+                hand.activate(clicked_house,game.home_coordinates); 
+                changed_players = false;
+                Crafty.audio.play("pick", 1);
+              };
+              MOVE_DONE = true;
+            };
+          };
+        });
+        // Call this whenever Entity's coordinates are changed to fix the board
+        game.update_board(game.x,game.y);
+        game.init_display();
+        //Loops on every home
+        for(var i=0; i<14; i++) {
+          
+          //Checks if i is "store"
+          if(i != 6 && i != 13) {
+            var x, y, dist;
+            for(var j=0; j<4; j++) {
+              while (true) {
+                x = Math.round((Math.random() * 85));
+                y = Math.round((Math.random() * 85));
+                dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+                if (dist <= 40)
+                  break;
+              }
+              x += game.home_coordinates[i].x;
+              y += game.home_coordinates[i].y;
+              var random_num = Math.floor((Math.random() * 10)+1);
+              switch (random_num) {
+                case 1:
+                  homes[i].push(Crafty.e("2D, Canvas, first, HideShow").attr({x: x, y: y}));
+                  break;
+                case 2:
+                  homes[i].push(Crafty.e("2D, Canvas, second, HideShow").attr({x: x, y: y}));
+                  break;
+                case 3:
+                  homes[i].push(Crafty.e("2D, Canvas, third, HideShow").attr({x: x, y: y}));
+                  break;
+                case 4:
+                  homes[i].push(Crafty.e("2D, Canvas, fourth, HideShow").attr({x: x, y: y}));
+                  break;
+                case 5:
+                  homes[i].push(Crafty.e("2D, Canvas, fifth, HideShow").attr({x: x, y: y}));
+                  break;
+                case 6:
+                  homes[i].push(Crafty.e("2D, Canvas, sixth, HideShow").attr({x: x, y: y}));
+                  break;
+                case 7:
+                  homes[i].push(Crafty.e("2D, Canvas, seventh, HideShow").attr({x: x, y: y}));
+                  break;
+                case 8:
+                  homes[i].push(Crafty.e("2D, Canvas, eighth, HideShow").attr({x: x, y: y}));
+                  break;
+                case 9:
+                  homes[i].push(Crafty.e("2D, Canvas, ninth, HideShow").attr({x: x, y: y}));
+                  break;
+                case 10:
+                  homes[i].push(Crafty.e("2D, Canvas, tenth, HideShow").attr({x: x, y: y}));
+                  break;
+              }
+            }
+          }
+        }
+        // Active zone for 'game'
+        game.bind("EnterFrame", function() {
+          // Call this whenever Entity's coordinates are changed to fix the board
+          this.update_board(this.x,this.y);
+          this.number_display();
+        });
+        var hand = Crafty.e('2D, Canvas, first_gesture, SpriteAnimation, Hand, Mouse')
+          .reel("putting", 1000, [
+          [0, 0], [1, 0], [2, 0], [3, 0],
+          [4, 0], [5, 0], [6, 0], [7, 0]
+          ])
+          .attr({x: game.x + 100, y: game.y + 100}) // Let's hand position be relative to the "Game" Entity
+          .animate("putting", -1);
+        hand.bind("EnterFrame", function() {
+          button = document.getElementById("htp")
+          button.onclick = function(){
+            $("#INST").modal('show')
+          }
+          new_game = document.getElementById("ng")
+          new_game.onclick = function(){
+            Crafty.enterScene("Main");
+          }
+          document.getElementById('message').innerHTML="Player " + player + "'s turn";
+          document.getElementById('player_score').innerHTML=homes[6].length;
+          document.getElementById('bot_score').innerHTML=homes[13].length;
+          //COMPUTER OPPONENT
+          if (player == 2 && !this.activated && this.reelPosition() > 6) {
+            clicked_house = getMoves();
+            console.log("PLAYER 2's turn " + clicked_house);
+            if(clicked_house != -1  && !(clicked_house >= 0 && clicked_house <= 6 || clicked_house == 13)) {
+              Crafty.audio.play("pick", 1);
+              STONES_TO_DISTRIB = homes[clicked_house];
+              for (var i = homes[clicked_house].length - 1; i >= 0; i--) {
+                homes[clicked_house][i].hide();
+                CURRENT_HOME = clicked_house;
+                this.reelPosition(0);
+                this.activated =  true;
+                this.remaining_moves = homes[clicked_house].length+1;
+                this.activate(clicked_house, game.home_coordinates);
+                changed_players = false;
+              };
+              MOVE_DONE = true;
+            };
+          };
+          if(this.reelPosition() > 6 && this.remaining_moves != 0) {
+            Crafty.audio.play("pick", 1);
+            this.reelPosition(0);
+            this.pauseAnimation();
+            ++CURRENT_HOME
+            CURRENT_HOME %= 14;
+            if(player == 1 && CURRENT_HOME == 13) {
+              CURRENT_HOME = 0;
+            } else if(player == 2 && CURRENT_HOME == 6) {
+              CURRENT_HOME = 7;
+            };
+            var stone = STONES_TO_DISTRIB.pop();
+            var x, y;
+            while (true) {
+              x = Math.round((Math.random() * 85));
+              y = Math.round((Math.random() * 85));
+              dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+              if (dist <= 40)
+                break;
+            }
+            stone.x = x + game.home_coordinates[CURRENT_HOME].x;
+            stone.y = y + game.home_coordinates[CURRENT_HOME].y;
+            stone.show();
+            homes[CURRENT_HOME].push(stone);
+            this.activate(CURRENT_HOME, game.home_coordinates);
+          }
+          if(this.remaining_moves == 0){
+            if(((homes[CURRENT_HOME].length == 1 && homes[Math.abs(CURRENT_HOME-12)].length != 0 && (CURRENT_HOME != 6 && CURRENT_HOME != 13)) || steal) && ((player == 1 && (CURRENT_HOME >= 0 && CURRENT_HOME <= 5)) || (player == 2 && (CURRENT_HOME >= 7 && CURRENT_HOME <= 13))) && !changed_players) {
+
+              hand.activated =  true;
+              // console.log("here " + player + " " + CURRENT_HOME);
+              if(forSteal == 0) {
+                console.log("here " + player + " " + CURRENT_HOME);
+                this.reelPosition(0);
+                homes[CURRENT_HOME][0].hide();
+                forSteal = 2;
+                steal = true;
+              };
+              if (forSteal == 2 && this.reelPosition() > 6) {       // second part
+                this.reelPosition(0);
+                if(CURRENT_HOME >= 0 && CURRENT_HOME <= 5) {
+                  this.x = game.home_coordinates[6].x;
+                  this.y = game.home_coordinates[6].y;
+                };
+                if(CURRENT_HOME >= 7 && CURRENT_HOME <= 12) {
+                  this.x = game.home_coordinates[13].x;
+                  this.y = game.home_coordinates[13].y;
+                };
+                var stone = homes[CURRENT_HOME].pop()
+                var x, y;
+                while (true) {
+                  x = Math.round((Math.random() * 85));
+                  y = Math.round((Math.random() * 85));
+                  dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+                  if (dist <= 40)
+                    break;
+                };
+                if(CURRENT_HOME >= 0 && CURRENT_HOME <= 5) {
+                  stone.x = x + game.home_coordinates[6].x;
+                  stone.y = y + game.home_coordinates[6].y;
+                  homes[6].push(stone);
+                };
+                if(CURRENT_HOME >= 7 && CURRENT_HOME <= 12) {
+                  stone.x = x + game.home_coordinates[13].x;
+                  stone.y = y + game.home_coordinates[13].y;
+                  homes[13].push(stone);
+                };
+                stone.show();
+                forSteal = 3;
+              };
+              if (forSteal == 3 && this.reelPosition() > 6) {         // third part
+                this.reelPosition(0);
+                this.x = game.home_coordinates[Math.abs(CURRENT_HOME-12)].x
+                this.y = game.home_coordinates[Math.abs(CURRENT_HOME-12)].y
+                for (var i = homes[Math.abs(CURRENT_HOME-12)].length - 1; i >= 0; i--) {
+                  homes[Math.abs(CURRENT_HOME-12)][i].hide();
+                };
+                forSteal = 4;
+              };
+              if (forSteal == 4 && this.reelPosition() > 5) {         // fourth part
+                this.reelPosition(0);
+                if(CURRENT_HOME >= 0 && CURRENT_HOME <= 5) {
+                  this.x = game.home_coordinates[6].x;
+                  this.y = game.home_coordinates[6].y;
+                };
+                if(CURRENT_HOME >= 7 && CURRENT_HOME <= 12) {
+                  this.x = game.home_coordinates[13].x;
+                  this.y = game.home_coordinates[13].y;
+                };
+                for (var i = homes[Math.abs(CURRENT_HOME-12)].length - 1; i >= 0; i--) {
+                  
+                  var stone = homes[Math.abs(CURRENT_HOME-12)].pop()
+                  var x, y;
+                  while (true) {
+                    x = Math.round((Math.random() * 85));
+                    y = Math.round((Math.random() * 85));
+                    dist = Math.sqrt(Math.pow(42.5-x, 2) + Math.pow(42.5-y, 2))
+                    if (dist <= 40)
+                      break;
+                  };
+                  if(CURRENT_HOME >= 0 && CURRENT_HOME <= 5) {
+                    stone.x = x + game.home_coordinates[6].x;
+                    stone.y = y + game.home_coordinates[6].y;
+                    homes[6].push(stone);
+                  };
+                  if(CURRENT_HOME >= 7 && CURRENT_HOME <= 12) {
+                    stone.x = x + game.home_coordinates[13].x;
+                    stone.y = y + game.home_coordinates[13].y;
+                    homes[13].push(stone);
+                  };
+                  stone.show();
+                };
+                forSteal = 0;
+                this.activated = false;
+                steal = false;
+                if (MOVE_DONE) {
+                  player = NEXT_PLAYER(CURRENT_HOME, player);
+                  console.log("Player " + player);
+                }
+                MOVE_DONE = false;
+              };
+            } else {
+              this.activated = false;
+
+              if (MOVE_DONE) {
+                player = NEXT_PLAYER(CURRENT_HOME, player);
+                console.log("Player " + player);
+              }
+              MOVE_DONE = false;
+            };
+
+            NO_SEEDS_1 = 0;
+            NO_SEEDS_2 = 0;
+            for (var i=0; i<6; i++){
+              NO_SEEDS_1+=homes[i].length;
+            }
+            for (var i=7; i<13; i++){
+              NO_SEEDS_2+=homes[i].length;
+            }
+            // console.log(NO_SEEDS_1 + " " + NO_SEEDS_2)
+            if (NO_SEEDS_1==0 || NO_SEEDS_2 ==0){
+              // GAMEOVER open modal
+              if (homes[13].length+NO_SEEDS_2 > homes[6].length+NO_SEEDS_1 && !done && !this.activated){
+                $('#GAMEOVER').modal('show');
+                done = true;
+              }
+              else if (homes[13].length+NO_SEEDS_2 < homes[6].length+NO_SEEDS_1 && !done && !this.activated){
+                $('#WINNER').modal('show');
+                done = true;
+              }
+              else if (homes[13].length+NO_SEEDS_2 == homes[6].length+NO_SEEDS_1 && !done && !this.activated){
+                $('#TIE').modal('show');
+                done = true;
+              }
+            }
+          }
+        });
+
+        function NEXT_PLAYER(stopped_at,player){
+          changed_players = true;
+          if (player == 1){
+            if (stopped_at == 6)
+              return player;
+            else return 2;
+          }
+          else if (player == 2){
+            if (stopped_at == 13)
+              return player;
+            else return 1;
+          }
+        }
+      }); 
+    });
+
+    Crafty.enterScene ("Main");
+  </script>
+  <div class="modal fade" id="GAMEOVER" role="dialog">
+    <div class="modal-dialog modal-lg" style="width: 30%">
+      <div class="modal-content" style="text-align: center;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <h3><b>GAME OVER</b></h3>
+          <p>You lost to a bot, loser.</p>
+        </div>
+        <div class="modal-footer" style="text-align: center;">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="Crafty.enterScene ('Main')">New Game</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Okay :|</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="WINNER" role="dialog">
+    <div class="modal-dialog modal-lg" style="width: 30%">
+      <div class="modal-content" style="text-align: center;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <h3><b>WOOOAAAHHHHH</b></h3>
+          <p>You won, you are very intelligent.</p>
+        </div>
+        <div class="modal-footer" style="text-align: center;">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="Crafty.enterScene ('Main')">New Game</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Ofcourse ;)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="TIE" role="dialog">
+    <div class="modal-dialog modal-lg" style="width: 30%">
+      <div class="modal-content" style="text-align: center;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <h3><b>It's a tie!</b></h3>
+          <p>Let's accept the fact that we are qually intelligent.</p>
+        </div>
+        <div class="modal-footer" style="text-align: center;">
+          <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="Crafty.enterScene ('Main')">New Game</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Uhmmm...</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="INST" role="dialog">
+    <div class="modal-dialog modal-lg" style="width: 40%">
+      <div class="modal-content" style="text-align: center;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">How to play Bantumi</h4>
+        </div>
+        <div class="modal-body">
+          <p>The bowls below are yours and the rightmost bowl is your score bowl. The upper bowls are your opponent's bowls. The leftmost bowl is your opponent's score bowl. During each turn, you take all the beads from one of your bowls and move anticlockwise, dropping one bead in each bowl except your opponent's Kalaha or score bowl until you run out.</p>
+        </div>
+        <div class="modal-footer" style="text-align: center;">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Okay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script type="text/javascript" src="/static/bootstrap/js/bootstrap.js"></script>
+<script type="text/javascript" src="/static/bootstrap/js/bootstrap.min.js"></script>
+
+</html>

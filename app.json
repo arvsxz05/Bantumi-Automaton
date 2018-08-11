@@ -1,0 +1,11 @@
+{
+  "name": "Bantumi",
+  "description": "A Simple Bantumi game using Crafty.js",
+  "repository": "https://github.com/arvsxz05/Bantumi-Automaton.git",
+  "keywords": [
+    "Bantumi",
+    "Game",
+    "Automata"
+  ],
+  "image": "heroku/nodejs"
+}
