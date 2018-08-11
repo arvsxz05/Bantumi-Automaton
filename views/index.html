@@ -5,19 +5,19 @@
   <link rel="stylesheet" type="text/css" href="/static/bootstrap/css/bootstrap.css">
   <style>
     body {
-                    margin: 0;
-                    background-color: #b05e38;
-                }
-                #game{
-                  top: 10%;
-                  left: 6%;
-                }
+      margin: 0;
+      background-color: #b05e38;
+    }
+    #game{
+      top: 10%;
+      left: 6%;
+    }
   </style>
   <title>Let's Play Bantumi!</title>
 </head>
 
 <body>
-  <nav class="navbar navbar-inverse" style="background-color: black">
+  <nav class="navbar navbar-inverse navbar-fixed-top" style="background-color: black">
     <div class="container-fluid">
       <div class="navbar-header"> <a class="navbar-brand" href="#" style="font-size: 25px; color: white"><b>B A N T U M I</b></a>
       </div>
@@ -25,7 +25,7 @@
       <button class="btn btn-primary navbar-btn" style="float: right;" id="htp">How to play</button>
       <button class="btn btn-primary navbar-btn" style="float: right; margin-right: 10px" id="ng">New Game</button>
     </div>
-  </nav>
+  </nav><br /><br />
   <nav class="navbar navbar-inverse navbar-fixed-bottom" style="background-color: black">
     <div class="container-fluid">
       <div class="navbar-header">
@@ -36,7 +36,7 @@
       <ul class="nav navbar-nav"></ul>
     </div>
   </nav>
-  <div id="game"></div> <span id="turn"><h2 style="margin:0px;margin-top: 70px; margin-right: 50px; color: black; text-align: center;" id="turn"><b></b></h2></span>
+  <div id="game"></div>
   <script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
   <script>
     Crafty.init(1200,363, document.getElementById('game'));
