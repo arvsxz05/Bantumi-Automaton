@@ -2,7 +2,7 @@
 
 Created by: [Arvin Arbuis](https://github.com/arvsxz05), [Florwilyn Cayson](https://github.com/florwilyn), [Jan Santino Mandreza](https://github.com/Tilmo8)
 
-Play it HERE -> https://bantumi.herokuapp.com/
+Play it HERE -> https://bantumi-v2.herokuapp.com/
 
 Bantumi (known as Kalah in US) is a solved game in which each player manages each of his/her own six houses and strives to get as much seeds on his/her store as possible. 
 
