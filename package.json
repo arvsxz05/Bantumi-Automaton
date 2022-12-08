@@ -26,7 +26,7 @@
     "body-parser": "^1.18.3",
     "chokidar": "^3.5.2",
     "consolidate": "^0.15.1",
-    "express": "^4.16.3",
+    "express": "^4.17.3",
     "nunjucks": "^3.1.3"
   }
 }
